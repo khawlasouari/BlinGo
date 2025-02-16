@@ -1,5 +1,6 @@
 package com.example.myapplication;
 
+import android.content.Intent;
 import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.os.VibrationEffect;
@@ -50,6 +51,8 @@ public class MainActivity2 extends AppCompatActivity {
                 vibrator.vibrate(500);
             }
         }
+        Intent intent = new Intent(MainActivity2.this, MainActivity3.class);
+        startActivity(intent);
     }
 
     @Override
