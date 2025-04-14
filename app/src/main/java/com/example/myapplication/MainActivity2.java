@@ -1,7 +1,8 @@
 package com.example.myapplication;
 
-import android.content.Intent;
+
 import android.media.MediaPlayer;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.VibrationEffect;
 import android.os.Vibrator;
@@ -30,6 +31,8 @@ public class MainActivity2 extends AppCompatActivity {
             public void onClick(View v) {
                 playSoundWithVibration();
             }
+
+
         });
     }
 
@@ -43,17 +46,16 @@ public class MainActivity2 extends AppCompatActivity {
         mediaPlayer = MediaPlayer.create(this, R.drawable.sound);
         mediaPlayer.start();
 
-        // Ajout de la vibration (500ms)
-        if (vibrator != null) {
-            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-                vibrator.vibrate(VibrationEffect.createOneShot(500, VibrationEffect.DEFAULT_AMPLITUDE));
-            } else {
-                vibrator.vibrate(500);
-            }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            VibrationEffect effect = VibrationEffect.createOneShot(500, VibrationEffect.DEFAULT_AMPLITUDE);
+            vibrator.vibrate(effect);
+        } else {
+            vibrator.vibrate(500);
         }
-        Intent intent = new Intent(MainActivity2.this, MainActivity3.class);
-        startActivity(intent);
+
     }
+
+
 
     @Override
     protected void onDestroy() {

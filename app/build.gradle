@@ -6,15 +6,14 @@ android {
     namespace 'com.example.myapplication'
     compileSdk 34
 
-
     defaultConfig {
         applicationId "com.example.myapplication"
-        minSdkVersion 26    // Mets au moins 26
+        minSdk 26
+
         targetSdkVersion 33
         versionCode 1
         versionName "1.0"
     }
-
 
     buildTypes {
         release {
@@ -22,33 +21,70 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
     }
+
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_1_8
         targetCompatibility JavaVersion.VERSION_1_8
     }
+
     buildFeatures {
         viewBinding true
     }
 }
 
-
-
 dependencies {
-    implementation 'com.google.mlkit:text-recognition:16.0.0'
-
     implementation libs.appcompat
     implementation libs.material
     implementation libs.activity
     implementation libs.constraintlayout
     implementation libs.navigation.fragment
     implementation libs.navigation.ui
-    testImplementation libs.junit
-    androidTestImplementation libs.ext.junit
-    androidTestImplementation libs.espresso.core
+    implementation libs.camera.view
+
+    // Retrofit pour les requêtes HTTP
     implementation 'com.squareup.retrofit2:retrofit:2.9.0'
     implementation 'com.squareup.retrofit2:converter-gson:2.9.0'
-    implementation 'org.json:json:20210307'
 
+    // TensorFlow Lite (Vision et reconnaissance faciale)
+    implementation 'org.tensorflow:tensorflow-lite-support:0.4.4'
+    implementation 'org.tensorflow:tensorflow-lite-task-vision:0.4.4'
+    implementation 'org.tensorflow:tensorflow-lite:2.9.0'
 
+    // CameraX (Prévisualisation de la caméra)
+    implementation "androidx.camera:camera-core:1.2.0-alpha04"
+    implementation "androidx.camera:camera-camera2:1.2.0-alpha04"
+    implementation "androidx.camera:camera-lifecycle:1.2.0-alpha04"
+    implementation "androidx.camera:camera-view:1.2.0-alpha04"
 
+    // Animation Lottie (Splash Screen)
+    implementation "com.airbnb.android:lottie:4.2.2"
+
+    // ML Kit (Détection de visages et reconnaissance de texte)
+    implementation 'com.google.mlkit:face-detection:16.1.5'
+    implementation 'com.google.mlkit:text-recognition:16.0.1'
+    implementation 'com.google.mlkit:vision-common:16.0.1'
+
+    // GSON (Conversion JSON)
+    implementation 'com.google.code.gson:gson:2.8.9'
+
+    // Android Libraries (Mises à jour)
+    implementation 'androidx.appcompat:appcompat:1.4.2'
+    implementation 'com.google.android.material:material:1.12.0'
+    implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
+    implementation 'androidx.navigation:navigation-fragment:2.5.1'
+    implementation 'androidx.navigation:navigation-ui:2.5.1'
+
+    // JUnit pour les tests
+    testImplementation ("junit:junit:4.13.2")
+    androidTestImplementation ("androidx.test.ext:junit:1.1.3")
+    androidTestImplementation ("androidx.test.espresso:espresso-core:3.4.0")
+    implementation ("com.google.firebase:firebase-database:20.2.2")
+    // Lifecycle
+    implementation ("androidx.lifecycle:lifecycle-runtime-ktx:2.3.1")
+    implementation ("androidx.lifecycle:lifecycle-process:2.3.1")
+    implementation ("com.google.firebase:firebase-firestore:24.4.5")
+
+}
+tasks.withType(JavaCompile).configureEach {
+    options.compilerArgs.add("-Xlint:deprecation")
 }
