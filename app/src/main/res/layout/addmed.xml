@@ -1,0 +1,125 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="16dp">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp">
+
+        <!-- Champ pour entrer le nom du médicament -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Nom du médicament"
+            android:textSize="18sp"
+            android:textStyle="bold"/>
+
+        <EditText
+            android:id="@+id/et_medicine_name"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Entrez le nom du médicament"
+            android:textSize="18sp"/>
+
+        <!-- Bouton pour entrer le nom par la voix -->
+        <Button
+            android:id="@+id/btn_voice_medicine"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="🎤 Entrer le nom par la voix"
+            android:textSize="18sp"
+            android:background="@android:color/holo_blue_dark"
+            android:textColor="@android:color/white"
+            android:padding="12dp"
+            android:contentDescription="Appuyez pour entrer le nom du médicament par la voix"/>
+
+        <!-- Champ pour entrer la dose du médicament -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Dose du médicament"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:layout_marginTop="16dp"/>
+
+        <EditText
+            android:id="@+id/et_dose"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Entrez la dose"
+            android:inputType="numberDecimal"
+            android:textSize="18sp"/>
+
+        <!-- Bouton pour entrer la dose par la voix -->
+        <Button
+            android:id="@+id/btn_voice_dose"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="🎤 Entrer la dose par la voix"
+            android:textSize="18sp"
+            android:background="@android:color/holo_green_dark"
+            android:textColor="@android:color/white"
+            android:padding="12dp"
+            android:contentDescription="Appuyez pour entrer la dose du médicament par la voix"/>
+
+        <!-- Sélection des jours de prise -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Jours de prise"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:layout_marginTop="16dp"/>
+
+        <CheckBox
+            android:id="@+id/cb_every_day"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Tous les jours"
+            android:textSize="16sp"/>
+
+        <!-- Sélection de l'heure de prise -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Heure de prise"
+            android:textSize="18sp"
+            android:textStyle="bold"
+            android:layout_marginTop="16dp"/>
+
+        <TimePicker
+            android:id="@+id/time_picker"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:timePickerMode="spinner"/>
+
+        <!-- Bouton pour entrer l'heure par la voix -->
+        <Button
+            android:id="@+id/btn_voice_time"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="🎤 Entrer l'heure par la voix"
+            android:textSize="18sp"
+            android:background="@android:color/holo_orange_dark"
+            android:textColor="@android:color/white"
+            android:padding="12dp"
+            android:contentDescription="Appuyez pour entrer l'heure par la voix"/>
+
+        <!-- Bouton pour valider -->
+        <Button
+            android:id="@+id/btn_save"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="✅ Enregistrer"
+            android:textSize="20sp"
+            android:background="@android:color/holo_red_dark"
+            android:textColor="@android:color/white"
+            android:padding="12dp"
+            android:layout_marginTop="16dp"/>
+    </LinearLayout>
+
+</ScrollView>
