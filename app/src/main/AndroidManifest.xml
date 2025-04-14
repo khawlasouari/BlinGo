@@ -6,7 +6,7 @@
     <uses-sdk
         android:minSdkVersion="21"
         android:targetSdkVersion="34" />
-    <!-- Configuration SDK -->
+    <!-- Configuration SDK 4 -->
     <!-- Permissions - Déclarez les permissions en dehors de <application> -->
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.VIBRATE" />
