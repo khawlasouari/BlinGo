@@ -5,9 +5,14 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.util.Log;
+
+import com.google.firebase.firestore.FirebaseFirestore;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class DatabaseHelper extends SQLiteOpenHelper {
 
@@ -86,4 +91,36 @@ public class DatabaseHelper extends SQLiteOpenHelper {
         db.delete(TABLE_MEDICAMENT, COLUMN_ID + " = ?", new String[]{String.valueOf(id)});
         db.close();
     }
+    public void modifierMedicament(Medicament m) {
+        // Mise à jour SQLite
+        SQLiteDatabase db = this.getWritableDatabase();
+        ContentValues values = new ContentValues();
+        values.put("nom",m.getNom());
+        values.put("dose", m.getDose());
+        values.put("heure", m.getHeurePrise());
+        db.update("medicament", values, "id = ?", new String[]{String.valueOf(m.getId())});
+        db.close();
+        Log.d("UPDATE_SQLITE", "SQLite update OK pour : " + m.getNom());
+
+        // Firestore
+        FirebaseFirestore firestore = FirebaseFirestore.getInstance();
+        Map<String, Object> data = new HashMap<>();
+        data.put("nom", m.getNom());
+        data.put("dose", m.getDose());
+        data.put("heure", m.getHeurePrise());
+
+        firestore.collection("medicaments")
+                .document(String.valueOf(m.getId()))  // <== clé fixe
+                .set(data)
+                .addOnSuccessListener(aVoid -> {
+                    Log.d("FIRESTORE", "Firestore update OK pour : " + m.getNom());
+                })
+                .addOnFailureListener(e -> {
+                    Log.e("FIRESTORE", "Erreur Firestore : " + e.getMessage());
+                });
+    }
+
+
+
+
 }

@@ -1,9 +1,12 @@
 package com.example.myapplication;
-import com.example.myapplication.MainActivity3;
+import com.example.myapplication.detectionObjet.MainActivity6;
 import com.example.myapplication.medica.Accueil;
+import com.example.myapplication.reconnaissanceFaciale.MainActivity;
+import com.example.myapplication.reconnaissanceTexte.MainActivity5;
 
 import android.content.ActivityNotFoundException;
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
 import android.speech.RecognizerIntent;
 import android.speech.tts.TextToSpeech;
@@ -15,6 +18,7 @@ import android.widget.Toast;
 import java.util.ArrayList;
 import java.util.Locale;
 
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
 
 public class MainActivity1 extends AppCompatActivity {
@@ -78,42 +82,44 @@ public class MainActivity1 extends AppCompatActivity {
         }
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.N)
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
         if (requestCode == REQUEST_CODE_SPEECH_INPUT && resultCode == RESULT_OK && data != null) {
             ArrayList<String> result = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
+
+            String spokenText = ""; // déclaration ici
             if (result != null && result.size() > 0) {
-                String spokenText = result.get(0).toLowerCase();
+                spokenText = result.get(0).toLowerCase();
 
                 if (spokenText.contains("reconnaissance")) {
                     startActivity(new Intent(MainActivity1.this, MainActivity.class));
-
-                } else if (spokenText.contains("detection")) {
-                    startActivity(new Intent(MainActivity1.this, DetectorActivity.class));
-
+                } else if (spokenText.contains("détection")) {
+                    startActivity(new Intent(MainActivity1.this, MainActivity6.class));
                 } else if (spokenText.contains("texte")) {
-                    Intent intent = new Intent(MainActivity1.this, MainActivity3.class);
-                    Log.d("DEBUG", "Starting MainActivity3...");
+                    Intent intent = new Intent(MainActivity1.this, MainActivity5.class);
+                    Log.d("DEBUG", "Starting MainActivity5...");
                     startActivity(intent);
 
-                }
-                else if (spokenText.contains("médicament") || spokenText.contains("liste de médicaments") || spokenText.contains("interface de médicament")) {
+                } else if (spokenText.contains("médicament") || spokenText.contains("liste de médicaments") || spokenText.contains("interface de médicament")) {
                     speak("Ouverture de l’interface des médicaments");
                     Intent intent = new Intent(MainActivity1.this, Accueil.class);
                     startActivity(intent);
-                }
 
-                else {
+                    startActivity(intent);
+
+                } else {
                     speak("Commande non reconnue. Veuillez réessayer.");
                 }
             }
-        }
-    }
+        }}
 
 
-    @Override
+
+
+        @Override
     protected void onResume() {
         super.onResume();
         if (textToSpeech != null) {

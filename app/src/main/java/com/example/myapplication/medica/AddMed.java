@@ -2,6 +2,7 @@ package com.example.myapplication.medica;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.os.Build;
 import android.os.Bundle;
 import android.speech.RecognizerIntent;
 import android.speech.tts.TextToSpeech;
@@ -11,10 +12,11 @@ import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.TimePicker;
 import android.widget.Toast;
-import com.example.myapplication.R; // ✅ Remplace par le bon nom de package
-
 
 import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
+
+import com.example.myapplication.R;
 
 import java.util.ArrayList;
 import java.util.Locale;
@@ -26,11 +28,18 @@ public class AddMed extends Activity {
     private Button voiceMedicineButton, voiceDoseButton, voiceTimeButton, saveButton;
     private TextToSpeech tts;
 
+    private DatabaseHelper dbHelper;
+    private boolean isEditMode = false;
+    private int medicamentId;
+
+
+    @RequiresApi(api = Build.VERSION_CODES.M)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.addmed);
 
+        // Initialisation des vues
         medicineNameEditText = findViewById(R.id.et_medicine_name);
         doseEditText = findViewById(R.id.et_dose);
         timePicker = findViewById(R.id.time_picker);
@@ -41,12 +50,39 @@ public class AddMed extends Activity {
         voiceTimeButton = findViewById(R.id.btn_voice_time);
         saveButton = findViewById(R.id.btn_save);
 
+        dbHelper = new DatabaseHelper(this);
+        if (getIntent().hasExtra("nom")) {
+            medicineNameEditText.setText(getIntent().getStringExtra("nom"));
+            doseEditText.setText(getIntent().getStringExtra("dose"));
+
+            // tu peux aussi bloquer le champ nom pour éviter de changer l'identité du médicament
+        }
+
+        // Text-to-Speech
         tts = new TextToSpeech(this, status -> {
             if (status != TextToSpeech.ERROR) {
                 tts.setLanguage(Locale.FRENCH);
             }
         });
 
+        // Mode modification ?
+        Intent intent = getIntent();
+        isEditMode = intent.getBooleanExtra("isEditMode", false);
+
+        if (isEditMode) {
+            medicamentId = intent.getIntExtra("id", -1);
+            medicineNameEditText.setText(intent.getStringExtra("nom"));
+            doseEditText.setText(intent.getStringExtra("dose"));
+            String heure = intent.getStringExtra("heure");
+            if (heure != null && heure.contains(":")) {
+                String[] parts = heure.split(":");
+                timePicker.setHour(Integer.parseInt(parts[0]));
+                timePicker.setMinute(Integer.parseInt(parts[1]));
+            }
+            saveButton.setText("Modifier");
+        }
+
+        // Écouteurs
         voiceMedicineButton.setOnClickListener(v -> startVoiceRecognition(101));
         voiceDoseButton.setOnClickListener(v -> startVoiceRecognition(102));
         voiceTimeButton.setOnClickListener(v -> startVoiceRecognition(103));
@@ -54,6 +90,7 @@ public class AddMed extends Activity {
 
         Log.d("AddMed", "onCreate() appelé");
     }
+
 
     private void startVoiceRecognition(int requestCode) {
         Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);
@@ -75,18 +112,19 @@ public class AddMed extends Activity {
         startActivityForResult(intent, requestCode);
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.M)
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (resultCode == RESULT_OK && data != null) {
             ArrayList<String> result = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
             if (result != null && !result.isEmpty()) {
-                String spokenText = result.get(0);
-                processVoiceInput(requestCode, spokenText);
+                processVoiceInput(requestCode, result.get(0));
             }
         }
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.M)
     private void processVoiceInput(int requestCode, String spokenText) {
         switch (requestCode) {
             case 101:
@@ -139,40 +177,50 @@ public class AddMed extends Activity {
         }
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.M)
     private void convertAndSetTime(String spokenTime) {
         try {
+            Log.d("VOICE_TIME", "Texte reçu pour l'heure : " + spokenTime);
+
             spokenTime = spokenTime.toLowerCase()
-                    .replace(" heures ", ":")
-                    .replace(" heure ", ":")
+                    .replace(" heures et demie", ":30")
+                    .replace(" heure et demie", ":30")
+                    .replace(" heures et quart", ":15")
+                    .replace(" heure et quart", ":15")
+                    .replace(" heures moins le quart", ":45")
+                    .replace(" heure moins le quart", ":45")
                     .replace(" heures", ":")
                     .replace(" heure", ":")
-                    .replace(" et demie", ":30")
-                    .replace(" et quart", ":15")
-                    .replace(" moins le quart", ":45");
+                    .replace("h", ":")
+                    .replace(" ", "");
 
-            Log.d("VoiceTime", "Texte après remplacement : " + spokenTime);
+            Log.d("VOICE_TIME", "Après remplacement : " + spokenTime);
 
             String[] timeParts = spokenTime.split(":");
 
-            if (timeParts.length == 2) {
+            if (timeParts.length >= 2) {
                 int hour = parseFrenchNumber(timeParts[0].trim());
                 int minute = parseFrenchNumber(timeParts[1].trim());
+
+                Log.d("VOICE_TIME", "Heure : " + hour + " Minute : " + minute);
 
                 if (hour >= 0 && hour <= 23 && minute >= 0 && minute <= 59) {
                     timePicker.setHour(hour);
                     timePicker.setMinute(minute);
                     speak("Heure enregistrée : " + hour + " heures " + minute + " minutes.");
                 } else {
-                    speak("Heure invalide.");
+                    speak("L'heure détectée est invalide.");
                 }
             } else {
-                speak("Je n'ai pas compris l'heure, essayez encore.");
+                speak("Je n'ai pas bien compris l'heure, essayez encore.");
             }
+
         } catch (Exception e) {
+            Log.e("VOICE_TIME", "Erreur lors du traitement de l'heure : " + e.getMessage());
             speak("Je n'ai pas compris l'heure, essayez encore.");
-            Log.e("VoiceTime", "Erreur de parsing : ", e);
         }
     }
+
 
     private int parseFrenchNumber(String word) {
         switch (word) {
@@ -211,20 +259,29 @@ public class AddMed extends Activity {
         }
     }
 
+    @RequiresApi(api = Build.VERSION_CODES.M)
     private void saveMedicine() {
-        String medicineName = medicineNameEditText.getText().toString();
-        String dose = doseEditText.getText().toString();
+        String medicineName = medicineNameEditText.getText().toString().trim();
+        String dose = doseEditText.getText().toString().trim();
         int hour = timePicker.getHour();
         int minute = timePicker.getMinute();
-        boolean everyDay = everyDayCheckBox.isChecked();
+        String heure = String.format(Locale.getDefault(), "%02d:%02d", hour, minute);
 
         if (medicineName.isEmpty() || dose.isEmpty()) {
             speak("Veuillez remplir toutes les informations.");
             return;
         }
 
-        String heure = String.format(Locale.getDefault(), "%02d:%02d", hour, minute);
+        if (isEditMode) {
+            Medicament m = new Medicament(medicamentId, medicineName, dose, heure);
+            dbHelper.modifierMedicament(m);
+            Toast.makeText(this, "Médicament modifié", Toast.LENGTH_SHORT).show();
+        } else {
+            dbHelper.ajouterMedicament(new Medicament(medicineName, dose, heure));
+            Toast.makeText(this, "Médicament ajouté", Toast.LENGTH_SHORT).show();
+        }
 
+        // Préparer le retour à Accueil
         Intent resultIntent = new Intent();
         resultIntent.putExtra("nom", medicineName);
         resultIntent.putExtra("dose", dose);
@@ -232,6 +289,7 @@ public class AddMed extends Activity {
         setResult(RESULT_OK, resultIntent);
         finish();
     }
+
 
     private void speak(String text) {
         if (tts != null && !tts.isSpeaking()) {

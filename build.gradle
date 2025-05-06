@@ -1,4 +1,22 @@
-// Top-level build file where you can add configuration options common to all sub-projects/modules.
+// build.gradle (Projet - racine)
+
+buildscript {
+    repositories {
+        google()
+        jcenter()
+        mavenCentral()
+        maven { url "https://github.com/jitsi/jitsi-maven-repository/raw/master/releases" }
+
+    }
+    dependencies {
+        classpath 'com.google.gms:google-services:4.3.15'
+        classpath 'com.android.tools.build:gradle:8.3.2'
+    }
+}
+
+
 plugins {
-alias(libs.plugins.androidApplication) apply false
+    alias(libs.plugins.androidApplication) apply false
+    // Si tu utilises Kotlin, ajoute :
+    // alias(libs.plugins.kotlinAndroid) apply false
 }

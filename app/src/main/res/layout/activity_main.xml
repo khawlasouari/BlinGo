@@ -5,7 +5,7 @@
     android:id="@+id/coordinatorLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".MainActivity">
+    tools:context=".reconnaissanceFaciale.MainActivity">
 
     <Button
         android:id="@+id/button2"
@@ -19,7 +19,7 @@
         app:layout_constraintTop_toBottomOf="@+id/imageView"
         app:layout_constraintVertical_bias="0.25" />
 
-    <FrameLayout
+    <WebView
         android:id="@+id/container"
         android:layout_width="297dp"
         android:layout_height="279dp"
@@ -44,13 +44,10 @@
             tools:layout_conversion_absoluteHeight="63dp"
             tools:layout_conversion_absoluteWidth="62dp" />
 
-        <androidx.camera.view.PreviewView
-            android:id="@+id/previewView"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent">
 
-        </androidx.camera.view.PreviewView>
-    </FrameLayout>
+
+
+    </WebView>
 
     <ImageButton
         android:id="@+id/imageButton"

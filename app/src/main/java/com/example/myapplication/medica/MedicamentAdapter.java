@@ -1,13 +1,15 @@
 package com.example.myapplication.medica;
 
+import android.content.Intent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
+
+import com.example.myapplication.R;
 import java.util.List;
-import com.example.myapplication.R; // ✅ Remplace par le bon nom de package
 
 public class MedicamentAdapter extends RecyclerView.Adapter<MedicamentAdapter.MedicamentViewHolder> {
 
@@ -31,6 +33,16 @@ public class MedicamentAdapter extends RecyclerView.Adapter<MedicamentAdapter.Me
         holder.tvName.setText(medicament.getNom());
         holder.tvDoseTime.setText("Dose: " + medicament.getDose() + " | Heure: " + medicament.getHeurePrise());
 
+        // 👉 Clique sur un élément = ouvrir AddMedActivity en mode modification
+        holder.itemView.setOnClickListener(v -> {
+            Intent intent = new Intent(v.getContext(), AddMed.class);
+            intent.putExtra("isEditMode", true);
+            intent.putExtra("id", medicament.getId());
+            intent.putExtra("nom", medicament.getNom());
+            intent.putExtra("dose", medicament.getDose());
+            intent.putExtra("heure", medicament.getHeurePrise());
+            v.getContext().startActivity(intent);
+        });
     }
 
     @Override

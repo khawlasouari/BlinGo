@@ -6,10 +6,29 @@
     <string name="second_fragment_label">Second Fragment</string>
     <string name="next">Next</string>
     <string name="previous">Previous</string>
-
+    <string name="gpu">GPU</string>
     <string name="hello_first_fragment">Hello first fragment</string>
     <string name="hello_second_fragment">Hello second fragment. Arg: %1$s</string>
     <string name="description_info">Info</string>
     <string name="request_permission">This sample needs camera permission.</string>
     <string name="camera_error">This device doesn\'t support Camera2 API.</string>
+    <string name="txt_message">No Text Available</string>
+    <string name="permission_camera_rationale">Access to the camera is needed for detection</string>
+    <string-array name="currency_labels">
+        <item>5 dinars tunisiens</item>
+        <item>10 dinars tunisiens</item>
+        <item>20 dinars tunisiens</item>
+        <item>50 dinars tunisiens</item>
+        <item>100 dinars tunisiens</item>
+        <item>200 dinars tunisiens</item>
+        <item>500 dinars tunisiens</item>
+        <item>1 dinar algérien</item>
+        <item>5 dinars algériens</item>
+        <item>10 dinars algériens</item>
+        <item>20 dinars algériens</item>
+        <item>50 dinars algériens</item>
+        <item>100 dinars algériens</item>
+        <item>500 dinars algériens</item>
+        <!-- Ajoute d'autres devises en dinars ici si nécessaire -->
+    </string-array>
 </resources>

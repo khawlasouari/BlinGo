@@ -10,7 +10,6 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
-import android.os.Handler;
 import android.speech.RecognizerIntent;
 import android.speech.tts.TextToSpeech;
 import android.speech.tts.UtteranceProgressListener;
@@ -59,11 +58,10 @@ public class Accueil extends AppCompatActivity {
         textToSpeech = new TextToSpeech(this, status -> {
             if (status == TextToSpeech.SUCCESS) {
                 textToSpeech.setLanguage(Locale.FRENCH);
-
-                // Attendre la fin de la parole avant de démarrer l'écoute
                 textToSpeech.setOnUtteranceProgressListener(new UtteranceProgressListener() {
                     @Override
-                    public void onStart(String utteranceId) {}
+                    public void onStart(String utteranceId) {
+                    }
 
                     @Override
                     public void onDone(String utteranceId) {
@@ -71,12 +69,13 @@ public class Accueil extends AppCompatActivity {
                     }
 
                     @Override
-                    public void onError(String utteranceId) {}
+                    public void onError(String utteranceId) {
+                    }
                 });
 
                 Bundle params = new Bundle();
                 params.putString(TextToSpeech.Engine.KEY_PARAM_UTTERANCE_ID, "ID1");
-                textToSpeech.speak("Bonjour, dites une commande comme ajouter un médicament ou supprimer suivi du nom.",
+                textToSpeech.speak("Bonjour, dites une commande comme ajouter, supprimer ou modifier un médicament.",
                         TextToSpeech.QUEUE_FLUSH, params, "ID1");
             }
         });
@@ -110,17 +109,24 @@ public class Accueil extends AppCompatActivity {
         Log.d("CommandeVocale", "Texte reconnu : " + command);
         Toast.makeText(this, "Texte reconnu : " + command, Toast.LENGTH_LONG).show();
 
-        if (command.matches(".*ajouter.*médicament.*")) {
+        if (command.matches(".*(ajouter|nouveau|enregistrer).*")) {
             speak("Ajout d’un médicament. Veuillez entrer les détails.");
             Intent intent = new Intent(this, AddMed.class);
             startActivityForResult(intent, ADD_MEDICAMENT_REQUEST);
 
         } else if (command.contains("supprimer")) {
-            String nom = command.replace("supprimer", "").trim();
+            String nom = command.replaceAll("supprimer", "")
+                    .replaceAll("[0-9]+.*", "")
+                    .trim();
             supprimerMedicamentParNom(nom);
 
-        } else if (command.contains("menu principal") || command.contains("accueil principal")) {
-            speak("Retour au menu principal.");
+        } else if (command.contains("modifier")) {
+            String nom = command.replace("modifier", "").trim();
+            modifierMedicamentParNom(nom);
+
+        } else if ( command.contains("début")) {
+
+            speak("accueil.");
             Intent intent = new Intent(this, MainActivity1.class);
             startActivity(intent);
             finish();
@@ -129,6 +135,8 @@ public class Accueil extends AppCompatActivity {
             speak("Commande non reconnue. Réessayez.");
         }
     }
+
+
 
     private void supprimerMedicamentParNom(String nom) {
         boolean trouve = false;
@@ -147,6 +155,27 @@ public class Accueil extends AppCompatActivity {
             speak("Médicament introuvable : " + nom);
         }
     }
+
+
+
+    private void modifierMedicamentParNom(String nom) {
+        for (Medicament m : medicamentList) {
+            if (m.getNom().equalsIgnoreCase(nom)) {
+                Intent intent = new Intent(this, AddMed.class);
+                intent.putExtra("isEditMode", true);
+                intent.putExtra("nom", m.getNom());
+                intent.putExtra("dose", m.getDose());
+                intent.putExtra("heure", m.getHeurePrise());
+                intent.putExtra("id", m.getId()); // pour mise à jour
+                startActivityForResult(intent, ADD_MEDICAMENT_REQUEST);
+                speak("Modification de " + nom);
+                return;
+            }
+        }
+        speak("Médicament non trouvé : " + nom);
+    }
+
+
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {

@@ -11,6 +11,9 @@
     <color name="color1">#ffa800</color>
     <color name="color2">#ff6f00</color>
     <color name="colorAccent">#425066</color>
-
+    <color name="gray">#808080</color>
+    <color name="orange">#FFA500</color>
     <color name="semi_transparent">#66000000</color>
+    <color name="bounding_box_color">#00FF00</color>
+
 </resources>

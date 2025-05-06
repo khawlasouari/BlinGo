@@ -1,151 +1,156 @@
 package com.example.myapplication;
 
-import android.app.Activity;
-import android.content.Intent;
-import android.graphics.Bitmap;
-import android.graphics.BitmapFactory;
+import android.Manifest;
+import android.content.pm.PackageManager;
+import android.graphics.Rect;
 import android.os.Bundle;
-import android.provider.MediaStore;
 import android.speech.tts.TextToSpeech;
-import android.widget.Button;
-import android.widget.ImageView;
-import android.widget.TextView;
+import android.util.Size;
 import android.widget.Toast;
 
-import androidx.activity.result.ActivityResultLauncher;
-import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.annotation.NonNull;
+import androidx.annotation.OptIn;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.camera.core.CameraSelector;
+import androidx.camera.core.ImageAnalysis;
+import androidx.camera.core.ImageProxy;
+import androidx.camera.core.Preview;
+import androidx.camera.lifecycle.ProcessCameraProvider;
+import androidx.camera.view.PreviewView;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 
+import com.google.common.util.concurrent.ListenableFuture;
 import com.google.mlkit.vision.common.InputImage;
+import com.google.mlkit.vision.text.Text;
 import com.google.mlkit.vision.text.TextRecognition;
 import com.google.mlkit.vision.text.TextRecognizer;
 import com.google.mlkit.vision.text.latin.TextRecognizerOptions;
 
-import java.io.IOException;
 import java.util.Locale;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class MainActivity3 extends AppCompatActivity {
 
-    private Button selectImageButton, captureImageButton;
-    private ImageView imageView;
-    private TextView textView;
-    private Bitmap bitmap;
+    private PreviewView previewView;
     private TextToSpeech textToSpeech;
-
-    // Launcher pour sélectionner une image depuis la galerie
-    private final ActivityResultLauncher<Intent> imagePickerLauncher = registerForActivityResult(
-            new ActivityResultContracts.StartActivityForResult(),
-            result -> {
-                if (result.getResultCode() == Activity.RESULT_OK && result.getData() != null) {
-                    try {
-                        bitmap = BitmapFactory.decodeStream(this.getContentResolver()
-                                .openInputStream(result.getData().getData()));
-                        imageView.setImageBitmap(bitmap);
-                        recognizeTextFromImage(bitmap);
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                        Toast.makeText(this, "Échec du chargement de l'image", Toast.LENGTH_SHORT).show();
-                    }
-                }
-            });
-
-    // Launcher pour capturer une image avec la caméra
-    private final ActivityResultLauncher<Intent> cameraLauncher = registerForActivityResult(
-            new ActivityResultContracts.StartActivityForResult(),
-            result -> {
-                if (result.getResultCode() == Activity.RESULT_OK && result.getData() != null) {
-                    Bundle extras = result.getData().getExtras();
-                    if (extras != null) {
-                        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
-                            bitmap = extras.getParcelable("data", Bitmap.class); // API 33+
-                        } else {
-                            bitmap = extras.getParcelable("data"); // Compatibilité API < 33
-                        }
-
-                        if (bitmap != null) {
-                            imageView.setImageBitmap(bitmap);
-                            recognizeTextFromImage(bitmap);
-                        } else {
-                            Toast.makeText(this, "Erreur : Image non disponible", Toast.LENGTH_SHORT).show();
-                        }
-                    }
-                }
-            });
+    private final int REQUEST_CODE_CAMERA_PERMISSION = 200;
+    private ExecutorService cameraExecutor;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main3); // Assure-toi que ce layout existe
+        previewView = new PreviewView(this);
+        setContentView(previewView);
 
-        // Initialisation des vues
-        selectImageButton = findViewById(R.id.selectImageButton);
-        captureImageButton = findViewById(R.id.captureImageButton);
-        imageView = findViewById(R.id.imageView);
-        textView = findViewById(R.id.textView);
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
+            startCamera();
+        } else {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.CAMERA}, REQUEST_CODE_CAMERA_PERMISSION);
+        }
 
-        // Initialiser la synthèse vocale
         textToSpeech = new TextToSpeech(this, status -> {
             if (status == TextToSpeech.SUCCESS) {
                 textToSpeech.setLanguage(Locale.FRENCH);
-                speak("Bienvenue dans l'application ! Appuyez sur Sélectionner une image ou Prendre une photo.");
-            } else {
-                Toast.makeText(this, "Échec de l'initialisation de la synthèse vocale", Toast.LENGTH_SHORT).show();
+                speak("La caméra est ouverte. Cadrez le texte au centre.");
             }
         });
 
-        // Bouton pour sélectionner une image
-        selectImageButton.setOnClickListener(v -> {
-            speak("Sélectionnez une image depuis votre galerie.");
-            Intent intent = new Intent(Intent.ACTION_PICK);
-            intent.setType("image/*");
-            imagePickerLauncher.launch(intent);
-        });
-
-        // Bouton pour prendre une photo
-        captureImageButton.setOnClickListener(v -> {
-            speak("Prenez une photo avec votre caméra.");
-            Intent intent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
-            cameraLauncher.launch(intent);
-        });
+        cameraExecutor = Executors.newSingleThreadExecutor();
     }
 
-    // Reconnaissance de texte à partir de l'image
-    private void recognizeTextFromImage(Bitmap bitmap) {
-        try {
-            InputImage inputImage = InputImage.fromBitmap(bitmap, 0);
-            TextRecognizer recognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS);
+    private void startCamera() {
+        ListenableFuture<ProcessCameraProvider> cameraProviderFuture = ProcessCameraProvider.getInstance(this);
 
-            recognizer.process(inputImage)
-                    .addOnSuccessListener(result -> {
-                        String recognizedText = result.getText();
-                        textView.setText(recognizedText);
-                        speak("Voici le texte reconnu : " + recognizedText);
-                        Toast.makeText(this, recognizedText, Toast.LENGTH_LONG).show();
-                    })
-                    .addOnFailureListener(e -> {
-                        e.printStackTrace();
-                        Toast.makeText(this, "Échec de la reconnaissance du texte", Toast.LENGTH_SHORT).show();
-                    });
+        cameraProviderFuture.addListener(() -> {
+            try {
+                ProcessCameraProvider cameraProvider = cameraProviderFuture.get();
 
-        } catch (Exception e) {
-            e.printStackTrace();
-            Toast.makeText(this, "Erreur lors de la reconnaissance du texte", Toast.LENGTH_SHORT).show();
+                Preview preview = new Preview.Builder().build();
+                preview.setSurfaceProvider(previewView.getSurfaceProvider());
+
+                ImageAnalysis imageAnalysis = new ImageAnalysis.Builder()
+                        .setTargetResolution(new Size(1280, 720))
+                        .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
+                        .build();
+
+                imageAnalysis.setAnalyzer(cameraExecutor, imageProxy -> {
+                    processImageProxy(imageProxy);
+                });
+
+                CameraSelector cameraSelector = CameraSelector.DEFAULT_BACK_CAMERA;
+                cameraProvider.unbindAll();
+                cameraProvider.bindToLifecycle(this, cameraSelector, preview, imageAnalysis);
+
+            } catch (ExecutionException | InterruptedException e) {
+                e.printStackTrace();
+            }
+        }, ContextCompat.getMainExecutor(this));
+    }
+    @OptIn(markerClass = androidx.camera.core.ExperimentalGetImage.class)
+    private void processImageProxy(ImageProxy imageProxy) {
+        if (imageProxy == null || imageProxy.getImage() == null) {
+            imageProxy.close();
+            return;
         }
+
+        InputImage inputImage = InputImage.fromMediaImage(imageProxy.getImage(), imageProxy.getImageInfo().getRotationDegrees());
+        TextRecognizer recognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS);
+
+        recognizer.process(inputImage)
+                .addOnSuccessListener(visionText -> {
+                    // Définir une zone de détection au centre
+                    Rect centerRect = new Rect(
+                            inputImage.getWidth() / 4,
+                            inputImage.getHeight() / 4,
+                            inputImage.getWidth() * 3 / 4,
+                            inputImage.getHeight() * 3 / 4
+                    );
+
+                    StringBuilder builder = new StringBuilder();
+                    for (Text.TextBlock block : visionText.getTextBlocks()) {
+                        if (block.getBoundingBox() != null && Rect.intersects(centerRect, block.getBoundingBox())) {
+                            builder.append(block.getText()).append("\n");
+                        }
+                    }
+// Pas de parenthèse fermante ici !
+
+
+                    if (!builder.toString().isEmpty()) {
+                        speak(builder.toString());
+                    }
+                })
+                .addOnFailureListener(Throwable::printStackTrace)
+                .addOnCompleteListener(task -> imageProxy.close());
     }
 
-    // Synthèse vocale
     private void speak(String text) {
-        if (textToSpeech != null) {
-            textToSpeech.speak(text, TextToSpeech.QUEUE_FLUSH, null, null);
-        }
+        textToSpeech.speak(text, TextToSpeech.QUEUE_FLUSH, null, null);
     }
 
     @Override
     protected void onDestroy() {
+        super.onDestroy();
         if (textToSpeech != null) {
             textToSpeech.stop();
             textToSpeech.shutdown();
         }
-        super.onDestroy();
+        if (cameraExecutor != null) {
+            cameraExecutor.shutdown();
+        }
     }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults); // ✅ Ajout obligatoire
+
+        if (requestCode == REQUEST_CODE_CAMERA_PERMISSION && grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            startCamera();
+        } else {
+            Toast.makeText(this, "Permission caméra refusée", Toast.LENGTH_SHORT).show();
+        }
+    }
+
 }
